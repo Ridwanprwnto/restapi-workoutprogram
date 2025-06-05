@@ -1,0 +1,11 @@
+# Text Editor Configuration
+.vscode
+
+# node js
+node_modules/
+
+# Env
+.env
+
+# Database
+db/

@@ -336,7 +336,7 @@ function handleCreateManageUsers($data) {
             $sqlInsertUser = "INSERT INTO tbl_users (role_user, username_user, password_user, gender_user) VALUES ('$role', '$user', '$hash', '$gender')";
             
             if (mysqli_query($conn, $sqlInsertUser) === TRUE) {
-                $sqlResultUsers = "SELECT id_user, role_user, username_user FROM tbl_users";
+                $sqlResultUsers = "SELECT id_user, role_user, username_user FROM tbl_users WHERE role_user != 'Admin' ORDER BY role_user ASC";
                 $queryResultUsers = mysqli_query($conn, $sqlResultUsers);
                 while ($rowsListUsers = mysqli_fetch_assoc($queryResultUsers)) {
                     $response = array(
@@ -370,7 +370,7 @@ function handleDeleteManageUsers($data) {
         $id = $data["idUser"];
 
         foreach ($id as $i) {
-            $sqlCheckUserProgram = "SELECT id_user FROM tbl_program WHERE id_user = '$i'";
+            $sqlCheckUserProgram = "SELECT id_user FROM tbl_program WHERE id_user = '$i' OR id_trainer = '$i'";
             $queryCheckUserProgram = mysqli_query($conn, $sqlCheckUserProgram);
             if (mysqli_num_rows($queryCheckUserProgram) > 0) {
                 $response = array('message' => 'Data user sudah terdaftar di program workout');
@@ -385,7 +385,7 @@ function handleDeleteManageUsers($data) {
             mysqli_query($conn, "DELETE FROM tbl_users WHERE id_user = '$i'");
         }
 
-        $sqlResultUsers = "SELECT id_user, role_user, username_user FROM tbl_users";
+        $sqlResultUsers = "SELECT id_user, role_user, username_user FROM tbl_users WHERE role_user != 'Admin' ORDER BY role_user ASC";
         $queryResultUsers = mysqli_query($conn, $sqlResultUsers);
         while ($rowsListUsers = mysqli_fetch_assoc($queryResultUsers)) {
             $response = array(
@@ -942,8 +942,8 @@ function handleCheckWorkoutTraining($data){
         $resultCheckWorkoutTraining = mysqli_query($conn, $sqlCheckWorkoutTraining);
         
         $pushdata = array();
-        
-        $url = "https://" . $_SERVER["HTTP_HOST"] . "/src/assets/gif/";
+
+        $url = "https://" . $_SERVER["HTTP_HOST"] . "/workout/app-assets/gif/";
         $gif = "animation.gif";
 
         if(mysqli_num_rows($resultCheckWorkoutTraining) > 0) {
@@ -955,7 +955,7 @@ function handleCheckWorkoutTraining($data){
                     'name' => $rowsCheckWorkoutTraining['name_workout'],
                     'met' => $rowsCheckWorkoutTraining['met_exercise'],
                     'weight' => $rowsCheckWorkoutTraining['weight_program'],
-                    'animation' => $checkGender === null ? $url.$gif : (!file_exists("../src/assets/gif/".strtolower($rowsCheckUser["gender_user"]).'/'.$checkGender) ? $url.$gif : $url.strtolower($rowsCheckUser["gender_user"]).'/'.$checkGender),
+                    'animation' => $checkGender === null ? $url.$gif : (!file_exists("../app-assets/gif/".strtolower($rowsCheckUser["gender_user"]).'/'.$checkGender) ? $url.$gif : $url.strtolower($rowsCheckUser["gender_user"]).'/'.$checkGender),
                     'status' => $checkGender,
                 );
                 $pushdata[] = $response;
@@ -995,7 +995,7 @@ function handleCheckWorkoutGuide($data){
         
         $pushdata = array();
         
-        $url = "https://" . $_SERVER["HTTP_HOST"] . "/src/assets/gif/";
+        $url = "https://" . $_SERVER["HTTP_HOST"] . "/workout/app-assets/gif/";
         $gif = "animation.gif";
 
         if(mysqli_num_rows($resultCheckWorkoutTraining) === 1) {
@@ -1006,7 +1006,7 @@ function handleCheckWorkoutGuide($data){
             $response = array(
                 'body' => $rowsCheckWorkoutTraining['name_bodypart'],
                 'name' => $rowsCheckWorkoutTraining['name_workout'],
-                'animation' => $checkGender === null ? $url.$gif : (!file_exists("../src/assets/gif/".strtolower($rowsCheckUser["gender_user"]).'/'.$checkGender) ? $url.$gif : $url.strtolower($rowsCheckUser["gender_user"]).'/'.$checkGender),
+                'animation' => $checkGender === null ? $url.$gif : (!file_exists("../app-assets/gif/".strtolower($rowsCheckUser["gender_user"]).'/'.$checkGender) ? $url.$gif : $url.strtolower($rowsCheckUser["gender_user"]).'/'.$checkGender),
                 'status' => $checkGender,
             );
             $pushdata[] = $response;
@@ -1284,7 +1284,7 @@ function handleSessionWorkoutTraining($data) {
                     if (!isset($result[$item['id']])) {
                         $result[$item['id']] = array(
                             'id' => $item['id'],
-                            'calory' => (float) $item['calory'],
+                            'calory' => $item['calory'],
                             'time' => $item['time']
                         );
                     } else {
@@ -1982,7 +1982,7 @@ function handleCreateTrainingExercise($data) {
             INNER JOIN tbl_training AS B ON A.id_schedule = B.id_schedule
             INNER JOIN tbl_exercise AS C ON B.id_exercise = C.id_exercise
             INNER JOIN tbl_bodypart AS D ON C.id_bodypart = D.id_bodypart 
-            WHERE A.code_program = '$program' AND A.date_schedule = '$date'";
+            WHERE A.code_program = '$program' AND A.date_schedule = '$date' ORDER BY D.name_bodypart ASC";
             $resultCheckScheduleActivity = mysqli_query($conn, $sqlCheckScheduleActivity);
     
             if(mysqli_num_rows($resultCheckScheduleActivity) > 0) {
@@ -2279,7 +2279,7 @@ function handleCheckScheduleWorkout($data) {
         $id = htmlspecialchars($data["schedule"]);
         $date = htmlspecialchars($data["date"]);
          
-        $sqlCheckSchedule = "SELECT id_schedule FROM tbl_schedule WHERE code_program = '$id' AND date_schedule = '$date'";
+        $sqlCheckSchedule = "SELECT id_schedule, code_training_pattern FROM tbl_schedule WHERE code_program = '$id' AND date_schedule = '$date'";
         $resultCheckSchedule = mysqli_query($conn, $sqlCheckSchedule);
 
         if (!$resultCheckSchedule) {
@@ -2290,39 +2290,53 @@ function handleCheckScheduleWorkout($data) {
 
         if (mysqli_num_rows($resultCheckSchedule) > 0) {
             $rowsCheckSchedule = mysqli_fetch_assoc($resultCheckSchedule);
-            $idSchedule = $rowsCheckSchedule["id_schedule"];
+            $ruleID = $rowsCheckSchedule["code_training_pattern"];
+            $scheduleID = $rowsCheckSchedule["id_schedule"];
 
-            $sqlCheckScheduleActivity = "SELECT A.id_schedule, B.id_exercise, B.id_training, C.name_workout, D.name_bodypart FROM tbl_schedule AS A
-            INNER JOIN tbl_training AS B ON A.id_schedule = B.id_schedule
-            INNER JOIN tbl_exercise AS C ON B.id_exercise = C.id_exercise
-            INNER JOIN tbl_bodypart AS D ON C.id_bodypart = D.id_bodypart 
-            WHERE A.id_schedule = '$idSchedule'";
-            $resultCheckScheduleActivity = mysqli_query($conn, $sqlCheckScheduleActivity);
+            $sqlCheckScheduleProgram = "SELECT A.id_bodypart, B.name_bodypart FROM tbl_detail_pattern AS A
+            INNER JOIN tbl_bodypart AS B ON A.id_bodypart = B.id_bodypart
+            WHERE A.code_training_pattern = '$ruleID'";
+            $resultCheckScheduleProgram = mysqli_query($conn, $sqlCheckScheduleProgram);
 
-            if (!$resultCheckScheduleActivity) {
-                $response = array('message' => 'Error checking schedule activity');
-                die(json_encode($response));
-                return false;
-            }
+            $pushdataRuleBody = array();
 
-            $response = array();
+            if (mysqli_num_rows($resultCheckScheduleProgram) > 0) {
 
-            if (mysqli_num_rows($resultCheckScheduleActivity) > 0) {
-                while ($rowsActivity = mysqli_fetch_assoc($resultCheckScheduleActivity)) {
+                while ($rowsRuleBodypart = mysqli_fetch_assoc($resultCheckScheduleProgram)) {
                     $response = array(
-                        'id' => $rowsActivity['id_training'],
-                        'label' => $rowsActivity['name_bodypart'],
-                        'value' => $rowsActivity['name_workout'],
+                        'label' => $rowsRuleBodypart['name_bodypart'],
+                        'value' => $rowsRuleBodypart['id_bodypart'],
                     );
-                    $pushdata[] = $response;
+                    $pushdataRuleBody[] = $response;
                 }
-            } else {
-                $response = array('message' => 'Data activity not found');
-                die(json_encode($response));
-                return false;
+
             }
 
-            echo json_encode($pushdata);
+            $sqlCheckWorkoutTraining = "SELECT A.id_training, B.name_workout, C.name_bodypart FROM tbl_training AS A
+            INNER JOIN tbl_exercise AS B ON A.id_exercise = B.id_exercise
+            INNER JOIN tbl_bodypart AS C ON B.id_bodypart = C.id_bodypart
+            WHERE A.id_schedule = '$scheduleID' ORDER BY C.name_bodypart ASC";
+            $resultCheckWorkoutTraining = mysqli_query($conn, $sqlCheckWorkoutTraining);
+
+            $pushdataListWorkout = array();
+
+            if (mysqli_num_rows($resultCheckWorkoutTraining) > 0) {
+
+                while ($rowsWorkoutTraining = mysqli_fetch_assoc($resultCheckWorkoutTraining)) {
+                    $response = array(
+                        'id' => $rowsWorkoutTraining['id_training'],
+                        'label' => $rowsWorkoutTraining['name_bodypart'],
+                        'value' => $rowsWorkoutTraining['name_workout']
+                    );
+                    $pushdataListWorkout[] = $response;
+                }
+
+            }
+
+            echo json_encode(array(
+                'rulebody' => $pushdataRuleBody,
+                'listworkout' => $pushdataListWorkout
+            ));
 
         } else {
             $response = array('message' => 'Schedule not found');
@@ -2364,7 +2378,7 @@ function handleDeleteWorkoutSession($data){
         INNER JOIN tbl_training AS B ON A.id_schedule = B.id_schedule
         INNER JOIN tbl_exercise AS C ON B.id_exercise = C.id_exercise
         INNER JOIN tbl_bodypart AS D ON C.id_bodypart = D.id_bodypart 
-        WHERE A.code_program = '$id' AND A.date_schedule = '$day'";
+        WHERE A.code_program = '$id' AND A.date_schedule = '$day' ORDER BY D.name_bodypart ASC";
         $resultCheckScheduleActivity = mysqli_query($conn, $sqlCheckScheduleActivity);
 
         if(mysqli_num_rows($resultCheckScheduleActivity) > 0) {

@@ -8,6 +8,8 @@ include '../config/func.php';
 $data = json_decode(file_get_contents('php://input'), true);
 
 // Handle request based on the endpoint
+$protokol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https://" : "http://";
+$host = $_SERVER['HTTP_HOST'];
 $endpoint = $_SERVER['REQUEST_URI'];
 $dir = dirname($_SERVER["PHP_SELF"]);
 
@@ -923,7 +925,7 @@ function handleCheckScheduleActivity($data){
 
 function handleCheckWorkoutTraining($data){
 
-    global $conn;
+    global $conn, $protokol, $host;
 
     if(isset($data)) {
         $idUser = htmlspecialchars($data['idUser']);
@@ -943,7 +945,7 @@ function handleCheckWorkoutTraining($data){
         
         $pushdata = array();
 
-        $url = "https://" . $_SERVER["HTTP_HOST"] . "/workout/app-assets/gif/";
+        $url = $protokol . $host . "/workout/app-assets/gif/";
         $gif = "animation.gif";
 
         if(mysqli_num_rows($resultCheckWorkoutTraining) > 0) {
@@ -977,7 +979,7 @@ function handleCheckWorkoutTraining($data){
 
 function handleCheckWorkoutGuide($data){
 
-    global $conn;
+    global $conn, $protokol, $host;
 
     if(isset($data)) {
         $idUser = htmlspecialchars($data['idUser']);
@@ -995,7 +997,7 @@ function handleCheckWorkoutGuide($data){
         
         $pushdata = array();
         
-        $url = "https://" . $_SERVER["HTTP_HOST"] . "/workout/app-assets/gif/";
+        $url = $protokol . $host . "/workout/app-assets/gif/";
         $gif = "animation.gif";
 
         if(mysqli_num_rows($resultCheckWorkoutTraining) === 1) {

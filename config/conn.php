@@ -1,46 +1,70 @@
 <?php
-// Simple .env loader function to parse .env file and set environment variables
+ini_set('display_errors', 0);
+ini_set('display_startup_errors', 0);
+error_reporting(E_ALL);
+
 function loadEnv($path)
 {
     if (!file_exists($path)) {
         throw new Exception(".env file not found at path: " . $path);
     }
-    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+
+    // Baca file dan hapus BOM jika ada
+    $content = file_get_contents($path);
+    $content = str_replace("\xEF\xBB\xBF", '', $content); // hapus UTF-8 BOM
+
+    $lines = explode("\n", $content);
+
     foreach ($lines as $line) {
-        if (strpos(trim($line), '#') === 0) {
-            continue; // skip comments
+        // Hapus whitespace & carriage return (Windows CRLF)
+        $line = trim($line, "\r\n\t ");
+
+        // Skip baris kosong dan komentar
+        if (empty($line) || strpos($line, '#') === 0) {
+            continue;
         }
-        // parse key=value lines
+
+        // Skip jika tidak ada tanda '='
+        if (strpos($line, '=') === false) {
+            continue;
+        }
+
         list($name, $value) = explode('=', $line, 2);
-        $name = trim($name);
+        $name  = trim($name);
         $value = trim($value);
-        if (!getenv($name)) { // prevent overwriting existing env vars
+
+        // Hapus tanda kutip jika ada
+        $value = trim($value, '"\'');
+
+        if (!empty($name)) {
             putenv(sprintf('%s=%s', $name, $value));
-            $_ENV[$name] = $value;
+            $_ENV[$name]    = $value;
             $_SERVER[$name] = $value;
         }
     }
 }
 
-// Load .env variables
+// Load .env
 try {
-    loadEnv(__DIR__ . '../../.env');
+    loadEnv(__DIR__ . '/../.env');
 } catch (Exception $e) {
     die("Error loading .env file: " . $e->getMessage());
 }
 
-// Retrieve environment variables for DB connection
-$servername = getenv('DB_HOST') ?: 'localhost';
-$username = getenv('DB_USERNAME') ?: 'root';
-$password = getenv('DB_PASSWORD') ?: '';
-$dbname = getenv('DB_NAME') ?: 'workout';
+// Ambil kredensial langsung dari $_ENV
+$servername = $_ENV['DB_HOST']     ?? 'localhost';
+$username   = $_ENV['DB_USERNAME'] ?? '';
+$password   = $_ENV['DB_PASSWORD'] ?? '';
+$dbname     = $_ENV['DB_NAME']     ?? '';
 
-// Create connection
+// Buat koneksi
 $conn = mysqli_connect($servername, $username, $password, $dbname);
 
-// Check connection
+// Cek koneksi
 if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
 }
 
+// Set charset ke UTF-8
+mysqli_set_charset($conn, 'utf8mb4');
 ?>

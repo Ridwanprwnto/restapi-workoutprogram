@@ -6,7 +6,7 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item active"><a href="#"></a>Management Workout</li>
-                    <li class="breadcrumb-item"><a href="index.php?page=<?= $modul; ?>">Workout Guide</a></li>
+                    <li class="breadcrumb-item"><a class="text-dark" href="index.php?page=<?= $modul; ?>">Workout Guide</a></li>
                 </ol>
             </nav>
         <?php }
@@ -15,7 +15,7 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item active"><a href="#"></a>Management Workout</li>
-                    <li class="breadcrumb-item"><a href="index.php?page=<?= $modul; ?>">Body Part</a></li>
+                    <li class="breadcrumb-item"><a class="text-dark" href="index.php?page=<?= $modul; ?>">Body Part</a></li>
                 </ol>
             </nav>
         <?php }
@@ -24,7 +24,7 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item active"><a href="#"></a>Management Workout</li>
-                    <li class="breadcrumb-item"><a href="index.php?page=<?= $modul; ?>">Workout Type</a></li>
+                    <li class="breadcrumb-item"><a class="text-dark" href="index.php?page=<?= $modul; ?>">Workout Type</a></li>
                 </ol>
             </nav>
         <?php }
@@ -42,7 +42,7 @@
             <!-- Breadcrump -->
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item active"><a href="index.php?page=<?= $modul; ?>">Home</a></li>
+                    <li class="breadcrumb-item active"><a class="text-dark" href="index.php?page=<?= $modul; ?>">Home</a></li>
                 </ol>
             </nav>
         <?php }
@@ -51,7 +51,7 @@
         <!-- Breadcrump -->
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="index.php?page=<?= $modul; ?>">Home</a></li>
+                <li class="breadcrumb-item"><a class="text-dark" href="index.php?page=<?= $modul; ?>">Home</a></li>
             </ol>
         </nav>
     <?php }
